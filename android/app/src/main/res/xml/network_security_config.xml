@@ -1,0 +1,9 @@
+<!-- res/xml/network_security_config.xml -->
+<network-security-config>
+    <!-- 允许所有域的明文流量 -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" /> <!-- 信任系统预装的CA证书 -->
+        </trust-anchors>
+    </base-config>
+</network-security-config>
