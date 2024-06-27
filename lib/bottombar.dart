@@ -22,7 +22,7 @@ class _BottomNavigationWidgetState extends State<BottomNavigationWidget> {
   void initState() {
     pages
       ..add(HomePageScreen())
-      ..add(EmailPageScreen())
+      ..add(RecommendedVideosScreen())
       ..add(PagesPageScreen())
       ..add(AirPlayPageScreen());
 
@@ -39,28 +39,28 @@ class _BottomNavigationWidgetState extends State<BottomNavigationWidget> {
               Icons.home,
               color: _bottomNavigationColor,
             ),
-            label: "home"
+            label: "主页"
           ),
           BottomNavigationBarItem(
             icon: Icon(
               Icons.email,
               color: _bottomNavigationColor,
             ),
-            label: "Email",
+            label: "推荐",
           ),
           BottomNavigationBarItem(
             icon: Icon(
               Icons.pages,
               color: _bottomNavigationColor,
             ),
-            label: "PAGES",
+            label: "历史",
           ),
           BottomNavigationBarItem(
             icon: Icon(
               Icons.airplay,
               color: _bottomNavigationColor,
             ),
-            label: "AIRPLAY",
+            label: "个人",
           )
         ],
 

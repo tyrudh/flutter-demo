@@ -1,9 +1,19 @@
 import 'package:bottomnavigationbar/bottombar.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'loginPage.dart'; // 导入登录页面
 import 'RegisterPage.dart';
+
+import 'model/UserProvider.dart';
+
+
 void main() {
-  runApp(MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => UserProvider(), // 创建UserProvider实例
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

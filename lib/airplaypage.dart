@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'user.dart';
-import 'api_service.dart';
+import 'package:provider/provider.dart';
 import 'dart:convert'; // 确保导入dart:convert库
 import 'package:shared_preferences/shared_preferences.dart';
+import 'model/UserProvider.dart';
+import 'model/VUser.dart';
+
+import 'services/api_service.dart';
 
 class AirPlayPageScreen extends StatefulWidget {
   @override
@@ -10,21 +13,11 @@ class AirPlayPageScreen extends StatefulWidget {
 }
 
 class _AirPlayPageScreenState extends State<AirPlayPageScreen> {
-  User? _user;
-  //
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   // 示例数据，实际应用中应从持久化存储或其他来源获取用户信息
-  //   _user = User(
-  //     name: "张三",
-  //     email: "zhangsan@example.com",
-  //     phoneNumber: "13812345678",
-  //   );
-  // }
-  late Future<User> _futureUser;
+  VUser? _user;
+
+  late Future<VUser> _futureUser;
   bool _isLoading = true;
-  User _initialUser = User(); // 初始化一个空的User对象来存放初始数据
+  VUser _initialUser = VUser(id: '', username: '', password: '', token: '', createTime: ''); // 初始化一个空的User对象来存放初始数据
 
   @override
   void initState() {
@@ -33,32 +26,30 @@ class _AirPlayPageScreenState extends State<AirPlayPageScreen> {
     _fetchAndSetUserData();
   }
   Future<void> _fetchAndSetUserData() async {
-   final apiService = ApiService();
+    final apiService = ApiService();
 
-   SharedPreferences prefs = await SharedPreferences.getInstance();
-
-   String? phone = prefs.getString('phone_number');
-   try {
-     final user = await apiService.getUser(phone!);
-     final decodedName = utf8.decode(utf8.encode(user.name!));
-     print("Raw user data: ${user.name}, ${user.email}, ${user.phone}");
-     setState(() {
-       _initialUser = User(
-         id: user.id,
-         name: user.name,
-         email: user.email,
-         phone: user.phone,
-       ); // 存储原始数据
-       _user = user;
-       _isLoading = false;
-
-     });
-   } catch (e) {
-     print("Error fetching user data: $e");
-     setState(() {
-       _isLoading = false;
-     });
-   }
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final user = userProvider.user;
+    var userId = user?.id;
+    if (userId != null) {
+      try {
+        final user = await apiService.getUserDetail(userId);
+        setState(() {
+          _user = user as VUser?;
+          _isLoading = false;
+        });
+      } catch (e) {
+        print("Error fetching user data: $e");
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } else {
+      print("User ID not found in SharedPreferences.");
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   Widget _buildEditProfileForm() {
@@ -74,10 +65,10 @@ class _AirPlayPageScreenState extends State<AirPlayPageScreen> {
                 decoration: InputDecoration(labelText: "姓名"),
                 onChanged: (value) {
                   setState(() {
-                    _user!.name = value;
+                    _user!.username = value;
                   });
                 },
-                controller: TextEditingController(text: _user?.name ?? ""),
+                controller: TextEditingController(text: _user?.username ?? ""),
               ),
               TextField(
                 decoration: InputDecoration(labelText: "邮箱"),
@@ -92,10 +83,10 @@ class _AirPlayPageScreenState extends State<AirPlayPageScreen> {
                 decoration: InputDecoration(labelText: "手机号"),
                 onChanged: (value) {
                   setState(() {
-                    _user!.phone = value;
+                    _user!.mobile = value;
                   });
                 },
-                controller: TextEditingController(text: _user?.phone ?? ""),
+                controller: TextEditingController(text: _user?.mobile ?? ""),
               ),
               SizedBox(height: 16),
               Row(
@@ -110,14 +101,15 @@ class _AirPlayPageScreenState extends State<AirPlayPageScreen> {
                   SizedBox(width: 8),
                   ElevatedButton(
                     onPressed: () async {
-                      // TODO: 实现保存更新后的用户信息到持久化存储
                       // 确保有更新才发起请求
                       final apiService = ApiService();
-                      if (_user != null && (_user!.name != _initialUser.name ||
+                      if (_user != null && (_user!.username != _initialUser.username ||
                       _user!.email != _initialUser.email ||
-                      _user!.phone != _initialUser.phone)) {
+                      _user!.mobile != _initialUser.mobile)) {
                       try {
-                      final updatedUser = await apiService.updateUser(_user!);
+
+
+                      // final updatedUser = await apiService.updateUser(_user!);
                       // 更新成功，可以弹出提示或更新UI等
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("用户信息更新成功")));
 
@@ -172,7 +164,7 @@ class _AirPlayPageScreenState extends State<AirPlayPageScreen> {
           SizedBox(height: 8),
           ListTile(
             leading: Icon(Icons.person),
-            title: Text(_user?.name ?? ""),
+            title: Text(_user?.username ?? ""),
           ),
           ListTile(
             leading: Icon(Icons.email),
@@ -180,7 +172,7 @@ class _AirPlayPageScreenState extends State<AirPlayPageScreen> {
           ),
           ListTile(
             leading: Icon(Icons.phone),
-            title: Text(_user?.phone ?? ""),
+            title: Text(_user?.mobile ?? ""),
           ),
         ],
       ),

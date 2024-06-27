@@ -121,7 +121,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
                 // 搜索建议列表，仅当有建议时显示
                 if (_searchSuggestions.isNotEmpty)
                   SizedBox(
-                    height: 100, // 根据需要调整高度
+                    height: 70, // 根据需要调整高度
                     child: ListView.builder(
                       shrinkWrap: true,
                       itemCount: _searchSuggestions.length,
@@ -141,11 +141,12 @@ class _HomePageScreenState extends State<HomePageScreen> {
               ],
             ),
             // 分类标签栏保持不变
-            SizedBox(height: 40),
+            SizedBox(height: 10),
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisSize: MainAxisSize.min, // 尝试减小主轴的大小
                 children: [
                   _buildTagButton('游戏'),
                   _buildTagButton('动漫'),
@@ -157,14 +158,16 @@ class _HomePageScreenState extends State<HomePageScreen> {
           ],
         ),
       ),
-      body: NotificationListener<ScrollEndNotification>(
-        onNotification: (notification) {
-          if (notification.metrics.extentAfter == 0 && _hasMore) {
-            _loadMoreVideos();
-            return true;
-          }
-          return false;
-        },
+    body: Container(
+    height: 500, // 例如，设置为屏幕高度的80%，根据需要调整
+    child: NotificationListener<ScrollEndNotification>(
+    onNotification: (notification) {
+    if (notification.metrics.extentAfter == 0 && _hasMore) {
+    _loadMoreVideos();
+    return true;
+    }
+    return false;
+    },
         child: ListView.builder(
           controller: _scrollController,
           itemCount: _videos.length + (_hasMore ? 1 : 0),
@@ -177,6 +180,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
           },
         ),
       ),
+    ),
     );
   }
 
@@ -244,6 +248,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
 
 // 确保你有定义_performSearch方法来处理搜索逻辑
   void _performSearch(String query) async {
+
     try {
       // 构建请求URL，这里假设您的API接受一个名为'keyword'的查询参数
       String url = ApiService.baseUrl +
@@ -255,8 +260,10 @@ class _HomePageScreenState extends State<HomePageScreen> {
 
       // 检查响应状态码
       if (response.statusCode == 200) {
-        final Map<String, dynamic> parsedJson = jsonDecode(response.body);
+        Utf8Decoder decode = new Utf8Decoder();
+        final Map<String, dynamic> parsedJson = jsonDecode(decode.convert(response.bodyBytes));
         // 解析响应体中的JSON数据
+
 
         // 假设API响应结构中包含一个名为'results'的键，用于存放搜索结果
         List<dynamic> videoDataList = parsedJson['data']['video'];
@@ -292,6 +299,8 @@ class _HomePageScreenState extends State<HomePageScreen> {
   }
 
   Future<void> _getSearchSuggestions(String query) async {
+    Utf8Decoder decode = new Utf8Decoder();
+
     if (query.isEmpty) {
       setState(() {
         _searchSuggestions = []; // 清空建议列表
@@ -304,7 +313,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
-        Map<String, dynamic> data = jsonDecode(response.body);
+        Map<String, dynamic> data = jsonDecode(decode.convert(response.bodyBytes));
         if (data.containsKey('data')) { // 确保数据中包含'suggestions'
           final List<dynamic> suggestionsJson = data['data'];
           setState(() {

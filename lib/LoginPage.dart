@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:convert'; // 确保导入dart:convert库
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:bottomnavigationbar/services/api_service.dart'; // 确保路径正确，根据实际情况调整
+import 'package:bottomnavigationbar/services/api_service.dart';
+
+import 'model/UserProvider.dart';
+import 'model/VUser.dart'; // 确保路径正确，根据实际情况调整
 class LoginPage extends StatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -73,7 +77,6 @@ class _LoginPageState extends State<LoginPage> {
         );
         return;
       }
-
       try {
         final response = await http.post(
           Uri.parse(ApiService.baseUrl+'/user/userLogin'), // 替换为您的登录API地址
@@ -84,9 +87,14 @@ class _LoginPageState extends State<LoginPage> {
         );
 
         if (response.statusCode == 200) {
+          Utf8Decoder decode = new Utf8Decoder();
+
           // 登录成功，假设后端返回的是用户信息
-          final Map<String, dynamic> userData = json.decode(response.body);
+          final Map<String, dynamic> userData = json.decode(decode.convert(response.bodyBytes));
           // 可以根据需要存储用户信息，如使用Secure Storage或Shared Preferences
+          final Map<String, dynamic> userDataDetails = userData['data'];
+          final user = VUser.fromJson(userDataDetails);
+          Provider.of<UserProvider>(context, listen: false).setUser(user);
           storeUserData(userData); // 存储用户数据
           // 然后导航到主界面
           Navigator.pushReplacementNamed(context, '/home');
